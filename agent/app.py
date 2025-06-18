@@ -150,26 +150,36 @@ If the user is engaging in discussion, try to steer them towards getting in touc
         return system_prompt
     
     def chat(self, message, history):
-        messages = [{"role": "system", "content": self.system_prompt()}] + history + [{"role": "user", "content": message}]
-        done = False
-        while not done:
-            response = self.openai.chat.completions.create(model="gpt-4o-mini", messages=messages, tools=tools)
-            if response.choices[0].finish_reason=="tool_calls":
-                message = response.choices[0].message
-                tool_calls = message.tool_calls
-                results = self.handle_tool_call(tool_calls)
-                messages.append(message)
-                messages.extend(results)
-            else:
-                done = True
-        return response.choices[0].message.content
+        try:
+            messages = [{"role": "system", "content": self.system_prompt()}] + history + [{"role": "user", "content": message}]
+            print(f"Chat request - Message: {message[:50]}...", flush=True)
+            print(f"History length: {len(history)}", flush=True)
+            
+            done = False
+            while not done:
+                response = self.openai.chat.completions.create(model="gpt-4o-mini", messages=messages, tools=tools)
+                if response.choices[0].finish_reason=="tool_calls":
+                    message_obj = response.choices[0].message
+                    tool_calls = message_obj.tool_calls
+                    results = self.handle_tool_call(tool_calls)
+                    messages.append(message_obj)
+                    messages.extend(results)
+                else:
+                    done = True
+            
+            print("Chat response generated successfully", flush=True)
+            return response.choices[0].message.content
+            
+        except Exception as e:
+            print(f"Error in chat method: {e}", flush=True)
+            return "I apologize, but I'm having trouble processing your request right now. Please try again."
     
 
-def create_interface():
+if __name__ == "__main__":
     me = Me()
     
-    # Recommended questions based on Ravi's profile
-    recommended_questions = [
+    # Suggested questions
+    suggested_questions = [
         "What is your background in software engineering and data science?",
         "Tell me about your management experience",
         "What technologies and programming languages do you work with?",
@@ -179,49 +189,76 @@ def create_interface():
         "Tell me about your data science expertise"
     ]
     
-    # Create the interface with custom components
-    with gr.Blocks(title="Chat with Ravi Kalla", theme=gr.themes.Soft()) as interface:
-        gr.Markdown("# 💬 Chat with Ravi Kalla")
-        gr.Markdown("Ask me anything about my professional background, experience, and skills!")
+    def chat_fn(message, history):
+        # Convert Gradio history format to OpenAI messages format
+        messages = []
+        if history:
+            for entry in history:
+                if isinstance(entry, dict) and "role" in entry and "content" in entry:
+                    # Proper OpenAI format with role/content
+                    messages.append(entry)
+                elif isinstance(entry, list) and len(entry) >= 2:
+                    # Gradio format [user_msg, assistant_msg]
+                    if entry[0] and entry[0].strip():  # User message
+                        messages.append({"role": "user", "content": str(entry[0])})
+                    if entry[1] and entry[1].strip():  # Assistant message
+                        messages.append({"role": "assistant", "content": str(entry[1])})
         
-        # Recommended questions section
-        gr.Markdown("### 🔹 Suggested Questions")
-        suggestion_buttons = []
-        with gr.Row():
-            with gr.Column():
-                for question in recommended_questions[:4]:
-                    btn = gr.Button(question, variant="secondary", size="sm")
-                    suggestion_buttons.append(btn)
-            with gr.Column():
-                for question in recommended_questions[4:]:
-                    btn = gr.Button(question, variant="secondary", size="sm")
-                    suggestion_buttons.append(btn)
-        
-        # Chat interface
-        chatbot = gr.Chatbot(type="messages", height=400)
-        msg = gr.Textbox(placeholder="Type your question here...", 
-                        label="Your Message", lines=2)
-        
-        def handle_message(message, history):
-            if message.strip():
-                response = me.chat(message, history)
-                history.append({"role": "user", "content": message})
-                history.append({"role": "assistant", "content": response})
-            return "", history
-        
-        def use_suggestion(question):
-            return question
-        
-        # Set up event handlers
-        msg.submit(handle_message, [msg, chatbot], [msg, chatbot])
-        
-        # Connect suggestion buttons to input textbox
-        for btn, question in zip(suggestion_buttons, recommended_questions):
-            btn.click(lambda q=question: q, outputs=msg)
+        try:
+            print(f"Converting history with {len(history) if history else 0} entries to {len(messages)} messages", flush=True)
+            response = me.chat(message, messages)
+            return response
+        except Exception as e:
+            print(f"Error in chat_fn: {e}", flush=True)
+            return f"I apologize, but I encountered an error. Please try again or ask a different question."
     
-    return interface
-
-if __name__ == "__main__":
-    interface = create_interface()
+    # Create interface with custom CSS to change "Examples" to "You can ask..."
+    css = """
+    /* Target Examples heading and hide it */
+    .examples h3,
+    .examples-container h3,
+    [data-testid*="examples"] h3,
+    .chatbot .examples h3 {
+        display: none !important;
+    }
+    
+    /* Add custom "You can ask..." heading */
+    .examples::before,
+    .examples-container::before,
+    [data-testid*="examples"]::before {
+        content: "You can ask...";
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        display: block;
+        color: #374151;
+    }
+    """
+    
+    interface = gr.ChatInterface(
+        fn=chat_fn,
+        title="💬 Chat with Ravi Kalla",
+        description="Ask me anything about my professional background, experience, and skills!",
+        examples=suggested_questions,
+        theme=gr.themes.Soft(),
+        retry_btn=None,
+        undo_btn=None,
+        clear_btn="Clear",
+        css=css,
+        textbox=gr.Textbox(placeholder="Ask about Ravi Kalla...", container=False, scale=7),
+        js="""
+        function() {
+            setTimeout(function() {
+                const headings = document.querySelectorAll('h3');
+                headings.forEach(h => {
+                    if (h.textContent && h.textContent.trim() === 'Examples') {
+                        h.textContent = 'You can ask...';
+                    }
+                });
+            }, 500);
+        }
+        """
+    )
+    
     interface.launch()
     
