@@ -109,7 +109,7 @@ class Me:
         self.name = "Ravi Kalla"
         
         # Load LinkedIn PDF with error handling
-        pdf_path = Path("agent/me/linkedin.pdf")
+        pdf_path = Path("me/linkedin.pdf")
         if not pdf_path.exists():
             print(f"Warning: LinkedIn PDF not found at {pdf_path}")
             self.linkedin = "LinkedIn profile not available"
@@ -126,7 +126,7 @@ class Me:
                 self.linkedin = "Error loading LinkedIn profile"
         
         # Load summary with error handling
-        summary_path = Path("agent/me/summary.txt")
+        summary_path = Path("me/summary.txt")
         if not summary_path.exists():
             print(f"Warning: Summary file not found at {summary_path}")
             self.summary = "Personal summary not available"
@@ -252,7 +252,7 @@ if __name__ == "__main__":
     interface = gr.ChatInterface(
         fn=chat_fn,
         title="💬 Chat with Ravi Kalla",
-        description="Ask me anything about my professional background, experience, and skills!",
+        description="Ask me anything about my professional background, experience, and skills! <small style='color: #666; font-size: 0.8em;'>v1.0</small>",
         examples=suggested_questions,
         theme=gr.themes.Soft(),
         retry_btn=None,
