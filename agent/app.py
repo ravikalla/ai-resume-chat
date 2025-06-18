@@ -165,7 +165,63 @@ If the user is engaging in discussion, try to steer them towards getting in touc
         return response.choices[0].message.content
     
 
-if __name__ == "__main__":
+def create_interface():
     me = Me()
-    gr.ChatInterface(me.chat, type="messages").launch()
+    
+    # Recommended questions based on Ravi's profile
+    recommended_questions = [
+        "What is your background in software engineering and data science?",
+        "Tell me about your management experience",
+        "What technologies and programming languages do you work with?",
+        "What kind of projects have you worked on?",
+        "Are you available for consulting or full-time opportunities?",
+        "What is your experience with team leadership?",
+        "Tell me about your data science expertise"
+    ]
+    
+    # Create the interface with custom components
+    with gr.Blocks(title="Chat with Ravi Kalla", theme=gr.themes.Soft()) as interface:
+        gr.Markdown("# 💬 Chat with Ravi Kalla")
+        gr.Markdown("Ask me anything about my professional background, experience, and skills!")
+        
+        # Recommended questions section
+        gr.Markdown("### 🔹 Suggested Questions")
+        suggestion_buttons = []
+        with gr.Row():
+            with gr.Column():
+                for question in recommended_questions[:4]:
+                    btn = gr.Button(question, variant="secondary", size="sm")
+                    suggestion_buttons.append(btn)
+            with gr.Column():
+                for question in recommended_questions[4:]:
+                    btn = gr.Button(question, variant="secondary", size="sm")
+                    suggestion_buttons.append(btn)
+        
+        # Chat interface
+        chatbot = gr.Chatbot(type="messages", height=400)
+        msg = gr.Textbox(placeholder="Type your question here...", 
+                        label="Your Message", lines=2)
+        
+        def handle_message(message, history):
+            if message.strip():
+                response = me.chat(message, history)
+                history.append({"role": "user", "content": message})
+                history.append({"role": "assistant", "content": response})
+            return "", history
+        
+        def use_suggestion(question):
+            return question
+        
+        # Set up event handlers
+        msg.submit(handle_message, [msg, chatbot], [msg, chatbot])
+        
+        # Connect suggestion buttons to input textbox
+        for btn, question in zip(suggestion_buttons, recommended_questions):
+            btn.click(lambda q=question: q, outputs=msg)
+    
+    return interface
+
+if __name__ == "__main__":
+    interface = create_interface()
+    interface.launch()
     
