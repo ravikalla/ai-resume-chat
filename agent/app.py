@@ -12,14 +12,27 @@ from pathlib import Path
 load_dotenv(override=True)
 
 # Validate required environment variables
-required_env_vars = ["OPENAI_API_KEY", "PUSHOVER_TOKEN", "PUSHOVER_USER"]
-missing_vars = [var for var in required_env_vars if not os.getenv(var)]
-if missing_vars:
-    print(f"Error: Missing required environment variables: {', '.join(missing_vars)}")
-    print("Please create a .env file based on .env.example and add your API keys.")
+required_env_vars = ["OPENAI_API_KEY"]
+optional_env_vars = ["PUSHOVER_TOKEN", "PUSHOVER_USER"]
+
+missing_required = [var for var in required_env_vars if not os.getenv(var)]
+missing_optional = [var for var in optional_env_vars if not os.getenv(var)]
+
+if missing_required:
+    print(f"Error: Missing required environment variables: {', '.join(missing_required)}")
+    print("Please set your OPENAI_API_KEY in the Hugging Face Spaces settings.")
     sys.exit(1)
 
+if missing_optional:
+    print(f"Warning: Optional environment variables not set: {', '.join(missing_optional)}")
+    print("Pushover notifications will be disabled.")
+
 def push(text):
+    # Check if Pushover credentials are available
+    if not os.getenv("PUSHOVER_TOKEN") or not os.getenv("PUSHOVER_USER"):
+        print(f"Notification (would send via Pushover): {text}")
+        return
+    
     try:
         response = requests.post(
             "https://api.pushover.net/1/messages.json",
@@ -31,8 +44,9 @@ def push(text):
             timeout=10
         )
         response.raise_for_status()
+        print(f"Pushover notification sent: {text}")
     except requests.exceptions.RequestException as e:
-        print(f"Failed to send notification: {e}")
+        print(f"Failed to send Pushover notification: {e}")
 
 
 def record_user_details(email, name="Name not provided", notes="not provided"):
@@ -260,5 +274,14 @@ if __name__ == "__main__":
         """
     )
     
-    interface.launch()
+    # Launch with appropriate settings for Hugging Face Spaces
+    # In production (Hugging Face), use specific port. In development, let Gradio choose.
+    port = int(os.getenv("GRADIO_SERVER_PORT", 7860))
+    
+    interface.launch(
+        server_name="0.0.0.0",
+        server_port=port if os.getenv("SPACE_ID") else None,  # Only use fixed port in HF Spaces
+        share=False,
+        show_error=True
+    )
     

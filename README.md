@@ -1,35 +1,47 @@
-# Resume AI Chatbot
+---
+title: Chat with Ravi Kalla
+emoji: 💬
+colorFrom: blue
+colorTo: purple
+sdk: gradio
+sdk_version: 4.44.1
+app_file: agent/app.py
+pinned: false
+license: mit
+---
 
-A personal AI chatbot that represents Ravi Kalla's professional profile through an interactive web interface.
+# Chat with Ravi Kalla - AI Resume Assistant
 
-## Setup
-
-1. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. **Configure environment variables:**
-   ```bash
-   cp .env.example .env
-   ```
-   Edit `.env` and add your API keys:
-   - `OPENAI_API_KEY` - Your OpenAI API key
-   - `PUSHOVER_TOKEN` - Your Pushover app token (for notifications)
-   - `PUSHOVER_USER` - Your Pushover user key
-
-3. **Run the application:**
-   ```bash
-   cd agent && python app.py
-   ```
-
-4. **Access the web interface:**
-   Open your browser to the URL displayed in the terminal (typically `http://127.0.0.1:7860`)
+An AI-powered chatbot that represents Ravi Kalla's professional profile. Ask questions about his software engineering background, data science experience, management skills, and career journey.
 
 ## Features
 
-- AI-powered chat interface using OpenAI GPT-4o-mini
-- Automatic contact information recording
-- Real-time notifications via Pushover
-- PDF-based LinkedIn profile integration
-- Professional representation for career inquiries
+- **Interactive Chat Interface** - Natural conversation about professional experience
+- **Suggested Questions** - Quick-start questions to explore different aspects of Ravi's background
+- **Real-time Responses** - Powered by OpenAI GPT-4o-mini for intelligent conversations
+- **Professional Focus** - Tailored for career discussions and networking
+
+## Usage
+
+Simply start a conversation by:
+1. Clicking one of the suggested questions, or
+2. Typing your own question about Ravi's professional background
+
+## Tech Stack
+
+- **Frontend**: Gradio 4.44.1
+- **AI Model**: OpenAI GPT-4o-mini
+- **Backend**: Python with OpenAI API integration
+- **Data Sources**: LinkedIn profile and professional summary
+
+## Environment Variables
+
+The following environment variables need to be set in Hugging Face Spaces:
+
+- `OPENAI_API_KEY` - Your OpenAI API key
+- `PUSHOVER_TOKEN` - Pushover app token (for notifications)
+- `PUSHOVER_USER` - Pushover user key (for notifications)
+
+## Contact
+
+This AI assistant can help connect you with Ravi Kalla for professional opportunities and collaboration.
