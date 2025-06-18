@@ -263,11 +263,25 @@ if __name__ == "__main__":
         js="""
         function() {
             setTimeout(function() {
+                // Change Examples heading to "You can ask..."
                 const headings = document.querySelectorAll('h3');
                 headings.forEach(h => {
                     if (h.textContent && h.textContent.trim() === 'Examples') {
                         h.textContent = 'You can ask...';
                     }
+                });
+                
+                // Auto-submit when example is clicked
+                const exampleButtons = document.querySelectorAll('.examples button, [data-testid*="examples"] button');
+                exampleButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        setTimeout(function() {
+                            const submitButton = document.querySelector('button[data-testid="submit-button"], .submit-btn, button[type="submit"]');
+                            if (submitButton && !submitButton.disabled) {
+                                submitButton.click();
+                            }
+                        }, 100);
+                    });
                 });
             }, 500);
         }
