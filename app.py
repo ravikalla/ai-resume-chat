@@ -194,13 +194,13 @@ if __name__ == "__main__":
     
     # Suggested questions
     suggested_questions = [
-        "What is your background in software engineering and data science?",
-        "Tell me about your management experience",
-        "What technologies and programming languages do you work with?",
-        "What kind of projects have you worked on?",
-        "Are you available for consulting or full-time opportunities?",
-        "What is your experience with team leadership?",
-        "Tell me about your data science expertise"
+        "What is your current role at Amazon Alexa and how do you lead Gen AI initiatives?",
+        "Tell me about the credit card streaming platform you built at Capital One",
+        "How did you achieve $30M+ in cost savings through your architectural work?",
+        "What's your experience with agentic AI systems and LLM orchestration?",
+        "Describe your leadership approach with managing 40+ engineers across organizations",
+        "What technologies do you specialize in for building high-scale distributed systems?",
+        "Tell me about your entrepreneurial experience and the company you founded"
     ]
     
     def chat_fn(message, history):
