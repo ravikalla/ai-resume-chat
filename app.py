@@ -196,7 +196,7 @@ if __name__ == "__main__":
     suggested_questions = [
         "What is your current role at Amazon Alexa and how do you lead Gen AI initiatives?",
         "Tell me about the credit card streaming platform you built at Capital One",
-        "How did you achieve $30M+ in cost savings through your architectural work?",
+        "What are the major cost savings you've achieved in your engineering work?",
         "What's your experience with agentic AI systems and LLM orchestration?",
         "Describe your leadership approach with managing 40+ engineers across organizations",
         "What technologies do you specialize in for building high-scale distributed systems?",
