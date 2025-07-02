@@ -49,8 +49,8 @@ def push(text):
         print(f"Failed to send Pushover notification: {e}")
 
 
-def record_user_details(email, name="Name not provided", notes="not provided"):
-    push(f"Recording {name} with email {email} and notes {notes}")
+def record_user_details(email, name="Name not provided", notes="not provided", ip_address="not provided"):
+    push(f"Recording {name} with email {email}, IP {ip_address}, and notes {notes}")
     return {"recorded": "ok"}
 
 def record_unknown_question(question):
@@ -139,12 +139,17 @@ class Me:
                 self.summary = "Error loading personal summary"
 
 
-    def handle_tool_call(self, tool_calls):
+    def handle_tool_call(self, tool_calls, ip_address="unknown"):
         results = []
         for tool_call in tool_calls:
             tool_name = tool_call.function.name
             arguments = json.loads(tool_call.function.arguments)
             print(f"Tool called: {tool_name}", flush=True)
+            
+            # Add IP address to record_user_details if not already provided
+            if tool_name == "record_user_details" and "ip_address" not in arguments:
+                arguments["ip_address"] = ip_address
+            
             tool = globals().get(tool_name)
             result = tool(**arguments) if tool else {}
             results.append({"role": "tool","content": json.dumps(result),"tool_call_id": tool_call.id})
@@ -163,11 +168,12 @@ If the user is engaging in discussion, try to steer them towards getting in touc
         system_prompt += f"With this context, please chat with the user, always staying in character as {self.name}."
         return system_prompt
     
-    def chat(self, message, history):
+    def chat(self, message, history, ip_address="unknown"):
         try:
             messages = [{"role": "system", "content": self.system_prompt()}] + history + [{"role": "user", "content": message}]
             print(f"Chat request - Message: {message[:50]}...", flush=True)
             print(f"History length: {len(history)}", flush=True)
+            print(f"User IP: {ip_address}", flush=True)
             
             done = False
             while not done:
@@ -175,7 +181,7 @@ If the user is engaging in discussion, try to steer them towards getting in touc
                 if response.choices[0].finish_reason=="tool_calls":
                     message_obj = response.choices[0].message
                     tool_calls = message_obj.tool_calls
-                    results = self.handle_tool_call(tool_calls)
+                    results = self.handle_tool_call(tool_calls, ip_address)
                     messages.append(message_obj)
                     messages.extend(results)
                 else:
@@ -203,7 +209,12 @@ if __name__ == "__main__":
         "Tell me about your entrepreneurial experience and the company you founded"
     ]
     
-    def chat_fn(message, history):
+    def chat_fn(message, history, request: gr.Request = None):
+        # Extract IP address from request
+        ip_address = "unknown"
+        if request and hasattr(request, 'client') and hasattr(request.client, 'host'):
+            ip_address = request.client.host
+        
         # Convert Gradio history format to OpenAI messages format
         messages = []
         if history:
@@ -220,7 +231,11 @@ if __name__ == "__main__":
         
         try:
             print(f"Converting history with {len(history) if history else 0} entries to {len(messages)} messages", flush=True)
-            response = me.chat(message, messages)
+            
+            # Send push notification for every user message
+            push(f"New message from {ip_address}: {message}")
+            
+            response = me.chat(message, messages, ip_address)
             return response
         except Exception as e:
             print(f"Error in chat_fn: {e}", flush=True)
